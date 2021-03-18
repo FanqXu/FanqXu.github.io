@@ -1,0 +1,415 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>邮件服务部署及一丝感想 | _0xf4n9x_'s Blog</title><meta name="description" content="邮件服务部署及一丝感想"><meta name="keywords" content="linux"><meta name="author" content="_0xf4n9x_,fanqxu@gmail.com"><meta name="copyright" content="_0xf4n9x_"><meta name="format-detection" content="telephone=no"><link rel="shortcut icon" href="/img/favicon.ico"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://www.google-analytics.com" crossorigin="crossorigin"/><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="crossorigin"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="twitter:card" content="summary"><meta name="twitter:title" content="邮件服务部署及一丝感想"><meta name="twitter:description" content="邮件服务部署及一丝感想"><meta name="twitter:image" content="https://fanqxu.github.io/gallery/email.webp"><script src="https://cdn.jsdelivr.net/npm/js-cookie/dist/js.cookie.min.js"></script><script>var autoChangeMode = '2'
+var t = Cookies.get("theme")
+if (autoChangeMode == '1'){
+  var isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+  var isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches
+  var isNotSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches
+  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+  if (t === undefined){
+    if (isLightMode) activateLightMode()
+    else if (isDarkMode) activateDarkMode()
+    else if (isNotSpecified || hasNoSupport){
+      console.log('You specified no preference for a color scheme or your browser does not support it. I Schedule dark mode during night time.')
+      var now = new Date()
+      var hour = now.getHours()
+      var isNight = hour < 6 || hour >= 18
+      isNight ? activateDarkMode() : activateLightMode()
+  }
+  } else if (t == 'light') activateLightMode()
+  else activateDarkMode()
+
+} else if (autoChangeMode == '2'){
+  now = new Date();
+  hour = now.getHours();
+  isNight = hour < 6 || hour >= 18
+  if(t === undefined) isNight? activateDarkMode() : activateLightMode()
+  else if (t === 'light') activateLightMode()
+  else activateDarkMode() 
+} else {
+  if ( t == 'dark' ) activateDarkMode()
+  else if ( t == 'light') activateLightMode()
+}
+
+function activateDarkMode(){
+  document.documentElement.setAttribute('data-theme', 'dark')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+    document.querySelector('meta[name="theme-color"]').setAttribute('content','#000')
+  }
+}
+function activateLightMode(){
+  document.documentElement.setAttribute('data-theme', 'light')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+  document.querySelector('meta[name="theme-color"]').setAttribute('content','#fff')
+  }
+}</script><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css"><link rel="canonical" href="https://fanqxu.github.io/2019/09/09/Email-server/"><link rel="prev" title="SQL注入之校园监控器" href="https://fanqxu.github.io/2019/10/14/SQLi-FirstTest/"><link rel="next" title="针对校园某服务器的一次渗透测试" href="https://fanqxu.github.io/2019/08/14/PenTest/"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-131397348-1', 'auto');
+ga('send', 'pageview');
+</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"We didn't find any results for the search: ${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"cookieDomain":"https://fanqxu.github.io/","msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  bookmark: {
+    message_prev: 'Press',
+    message_next: 'to bookmark this page'
+  },
+  runtime_unit: 'days',
+  runtime: false,
+  copyright: undefined,
+  ClickShowText: undefined,
+  medium_zoom: false,
+  fancybox: true,
+  Snackbar: undefined,
+  baiduPush: false,
+  highlightCopy: true,
+  highlightLang: true,
+  highlightShrink: 'false',
+  isFontAwesomeV5: false,
+  isPhotoFigcaption: false
+  
+}</script><script>var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isSidebar: true  
+  }</script><noscript><style>
+#page-header {
+  opacity: 1
+}
+.justified-gallery img{
+  opacity: 1
+}
+</style></noscript><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="_0xf4n9x_'s Blog" type="application/atom+xml">
+</head><body><div id="mobile-sidebar"><div id="menu_mask"></div><div id="mobile-sidebar-menus"><div class="mobile_author_icon"><img class="avatar-img" src="/img/avatar.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="mobile_post_data"><div class="mobile_data_item is-center"><div class="mobile_data_link"><a href="/archives/"><div class="headline">Articles</div><div class="length_num">26</div></a></div></div><div class="mobile_data_item is-center">      <div class="mobile_data_link"><a href="/tags/"><div class="headline">Tags</div><div class="length_num">26</div></a></div></div><div class="mobile_data_item is-center">     <div class="mobile_data_link"><a href="/categories/"><div class="headline">Categories</div><div class="length_num">5</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> Links</span></a></div><div class="menus_item"><a class="site-page" href="/lab/"><i class="fa-fw fa fa fa-flask"></i><span> Labs</span></a></div><div class="menus_item"><a class="site-page"><i class="fa-fw fa fa-list" aria-hidden="true"></i><span> About</span><i class="fa fa-chevron-down menus-expand" aria-hidden="true"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/books/"><i class="fa-fw fa fa-book"></i><span> Books</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-film"></i><span> Movies</span></a></li><li><a class="site-page" href="/about/"><i class="fa-fw fa fa-user"></i><span> Me</span></a></li></ul></div></div></div></div><i class="fa fa-arrow-right on" id="toggle-sidebar" aria-hidden="true">     </i><div id="sidebar"><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar">     </div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8C%E6%88%90-E-MAIL-%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2"><span class="toc-number">1.</span> <span class="toc-text">完成 E-MAIL 服务器部署</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%9C%A8%E6%AD%A4%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E9%82%AE%E4%BB%B6%E6%9C%8D%E5%8A%A1%EF%BC%8C%E5%85%B7%E4%BD%93%E8%A6%81%E6%B1%82%E4%B8%BA%EF%BC%9A"><span class="toc-number">1.0.1.</span> <span class="toc-text">1.在此服务器上安装配置邮件服务，具体要求为：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%88%9B%E5%BB%BA%E8%87%AA%E7%AD%BE%E5%90%8D-SSL-%E8%AF%81%E4%B9%A6%EF%BC%8C%E9%85%8D%E7%BD%AE%E9%82%AE%E4%BB%B6%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84mail-%E8%BF%9E%E6%8E%A5%E3%80%82%E5%85%B7%E4%BD%93%E8%A6%81%E6%B1%82%E4%B8%BA%EF%BC%9A"><span class="toc-number">1.0.2.</span> <span class="toc-text">2.创建自签名 SSL 证书，配置邮件服务器的mail 连接。具体要求为：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DNS-%E8%A7%A3%E6%9E%90%E5%A4%A7%E6%B3%95"><span class="toc-number">2.</span> <span class="toc-text">DNS 解析大法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Email-%E6%9C%8D%E5%8A%A1"><span class="toc-number">3.</span> <span class="toc-text">Email 服务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%82%AE%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BD%AF%E4%BB%B6"><span class="toc-number">3.1.</span> <span class="toc-text">邮件传输软件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E8%87%AA%E7%AD%BE%E5%90%8D-SSL-%E8%AF%81%E4%B9%A6%E3%80%82"><span class="toc-number">3.2.</span> <span class="toc-text">创建自签名 SSL 证书。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E4%BA%8E-SMTPS"><span class="toc-number">3.3.</span> <span class="toc-text">关于 SMTPS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%90%AF%E7%94%A8-SMTPS"><span class="toc-number">3.3.1.</span> <span class="toc-text">为什么启用 SMTPS ? ? ?</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E4%BA%8E-POP3S"><span class="toc-number">3.4.</span> <span class="toc-text">关于 POP3S</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Why-POP3S"><span class="toc-number">3.4.1.</span> <span class="toc-text">Why POP3S ? ? ?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BC%80%E6%BA%90-POP3-%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-number">3.4.2.</span> <span class="toc-text">开源 POP3 服务器</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AA%8C%E8%AF%81%E7%8E%AF%E8%8A%82"><span class="toc-number">3.5.</span> <span class="toc-text">验证环节</span></a></li></ol></li></ol></div></div></div><div id="body-wrap"><div class="post-bg" id="nav" style="background-image: url(/gallery/email.webp)"><div id="page-header"><span class="pull_left" id="blog_name"><a class="blog_title" id="site-name" href="/">_0xf4n9x_'s Blog</a></span><span class="pull_right menus"><div id="search_button"><a class="site-page social-icon search"><i class="fa fa-search fa-fw"></i><span> Search</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> Links</span></a></div><div class="menus_item"><a class="site-page" href="/lab/"><i class="fa-fw fa fa fa-flask"></i><span> Labs</span></a></div><div class="menus_item"><a class="site-page"><i class="fa-fw fa fa-list" aria-hidden="true"></i><span> About</span><i class="fa fa-chevron-down menus-expand" aria-hidden="true"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/books/"><i class="fa-fw fa fa-book"></i><span> Books</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-film"></i><span> Movies</span></a></li><li><a class="site-page" href="/about/"><i class="fa-fw fa fa-user"></i><span> Me</span></a></li></ul></div></div><span class="toggle-menu close"><a class="site-page"><i class="fa fa-bars fa-fw" aria-hidden="true"></i></a></span></span></div><div id="post-info"><div id="post-title"><div class="posttitle">邮件服务部署及一丝感想</div></div><div id="post-meta"><div class="meta-firstline"><time class="post-meta__date"><span class="post-meta__date-created" title="Created 2019-09-09 18:14:28"><i class="fa fa-calendar" aria-hidden="true"></i> Created 2019-09-09</span><span class="post-meta__separator">|</span><span class="post-meta__date-updated" title="Updated 2020-04-12 22:19:51"><i class="fa fa-history" aria-hidden="true"></i> Updated 2020-04-12</span></time></div><div class="meta-secondline"> </div><div class="meta-thirdline"><span class="post-meta-pv-cv"><i class="fa fa-eye post-meta__icon" aria-hidden="true"> </i><span>Post View:</span><span id="busuanzi_value_page_pv"></span></span><span class="post-meta-commentcount"><span class="post-meta__separator">|</span><i class="post-meta__icon fa fa-comment-o" aria-hidden="true"></i><span>Comments:</span><a href="/2019/09/09/Email-server/#post-comment" itemprop="discussionUrl"><span class="valine-comment-count comment-count" data-xid="/2019/09/09/Email-server/" itemprop="commentCount"></span></a></span></div></div></div></div><main class="layout_post" id="content-inner"><article id="post"><div id="article-container"><blockquote>
+<h2 id="完成-E-MAIL-服务器部署"><a href="#完成-E-MAIL-服务器部署" class="headerlink" title="完成 E-MAIL 服务器部署"></a>完成 E-MAIL 服务器部署</h2><h4 id="1-在此服务器上安装配置邮件服务，具体要求为："><a href="#1-在此服务器上安装配置邮件服务，具体要求为：" class="headerlink" title="1.在此服务器上安装配置邮件服务，具体要求为："></a>1.在此服务器上安装配置邮件服务，具体要求为：</h4><ul>
+<li><input checked="" disabled="" type="checkbox"> <strong>（1）创建三个邮箱用户 mail4，mail5，mail6，用户密码为789，不允许本地登录；</strong></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>（2）邮件服务器的域名后缀为 netskills.net，邮件服务器要在所有IP地址上进行侦听；</strong></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>（3）为拒绝垃圾邮件，设置邮件服务器的黑名单，拒绝接收用户 mail5 的邮件；</strong></li>
+</ul>
+<h4 id="2-创建自签名-SSL-证书，配置邮件服务器的mail-连接。具体要求为："><a href="#2-创建自签名-SSL-证书，配置邮件服务器的mail-连接。具体要求为：" class="headerlink" title="2.创建自签名 SSL 证书，配置邮件服务器的mail 连接。具体要求为："></a>2.创建自签名 SSL 证书，配置邮件服务器的mail 连接。具体要求为：</h4><ul>
+<li><input checked="" disabled="" type="checkbox"> <strong>（1）密钥路径为 /etc/pki/tls/certs/server.key；</strong></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>（2）证书路径为 /etc/pki/tls/certs/server.crt；</strong></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>（3）设置仅支持 smtps 和 pop3s 协议连接；</strong></li>
+</ul>
+</blockquote>
+<p>一道赛题！由于在此之前，本人对于<strong>【邮件服务】</strong>相关知识没有一丝了解；以至于被此题折磨了一天！</p>
+<h2 id="DNS-解析大法"><a href="#DNS-解析大法" class="headerlink" title="DNS 解析大法"></a>DNS 解析大法</h2><p>部署邮件服务前，需要将 DNS 服务配置完毕；为电子邮件系统提供域名解析。</p>
+<p>配置服务器主机名称,需要保证服务器主机名称与发信域名保持一致。</p>
+<pre><code class="bash">[root@localhost ~]# hostnamectl set-hostname mail.netskills.net
+</code></pre>
+<p>关闭防火墙及 <strong>SElinux</strong>。</p>
+<pre><code class="bash">[root@mail ~]# systemctl stop firewalld
+[root@mail ~]# systemctl disable firewalld
+[root@mail ~]# setenforce 0
+[root@mail ~]# getenforce 
+Permissive
+</code></pre>
+<p>安装 <em>bind</em> 包，修改主配置文件。</p>
+<pre><code class="bash">[root@mail ~]# yum install bind
+[root@mail ~]# vim /etc/named.conf
+options &#123;
+        listen-on port 53 &#123; any; &#125;;
+        listen-on-v6 port 53 &#123; ::1; &#125;;
+        directory       &quot;/var/named&quot;;
+        dump-file       &quot;/var/named/data/cache_dump.db&quot;;
+        statistics-file &quot;/var/named/data/named_stats.txt&quot;;
+        memstatistics-file &quot;/var/named/data/named_mem_stats.txt&quot;;
+        allow-query     &#123; any; &#125;;
+……………………省略……………………
+</code></pre>
+<p>修改区域配置文件和数据配置（正向/反向）文件。</p>
+<pre><code class="bash">[root@mail ~]# vim /etc/named.rfc1912.zones
+zone &quot;netskills.net&quot; IN &#123;
+    type master;
+    file &quot;netskills.net.zone&quot;;
+    allow-update &#123; none; &#125;;
+&#125;;
+……………………省略……………………
+zone &quot;10.168.192.in-addr.arpa&quot; IN &#123;
+    type master;
+    file &quot;reverse.netskills.net&quot;;
+    allow-update &#123; none; &#125;;
+&#125;;
+……………………省略……………………
+[root@mail ~]# cp -p /var/named/named.localhost /var/named/netskills.net.zone
+[root@mail ~]# vim /var/named/netskills.net.zone
+$TTL 1D
+@    IN SOA    netskills.net. rname.invalid. (
+                    0    ; serial
+                    1D    ; refresh
+                    1H    ; retry
+                    1W    ; expire
+                    3H )    ; minimum
+    NS    ns.netskills.net.
+ns    A    192.168.10.101
+@    MX 10    mail.netskills.net.
+mail    A    192.168.10.101
+[root@mail ~]# cp -p /var/named/named.loopback /var/named/reverse.netskills.net
+[root@mail ~]# vim /var/named/reverse.netskills.net
+$TTL 1D
+@    IN SOA    netskills.net. rname.invalid. (
+                    0    ; serial
+                    1D    ; refresh
+                    1H    ; retry
+                    1W    ; expire
+                    3H )    ; minimum
+    NS    mail.netskills.net.
+    A    127.0.0.1
+
+101    PTR    mail.netskills.net.
+</code></pre>
+<p>重启服务并为本地设置 DNS 服务器。</p>
+<pre><code class="bash">[root@mail ~]# systemctl restart named
+[root@mail ~]# systemctl enable named
+[root@mail ~]# cat /etc/resolv.conf 
+nameserver 192.168.10.101
+</code></pre>
+<p><strong>验证：</strong></p>
+<pre><code class="bash">[root@mail ~]# nslookup 
+&gt; mail.netskills.net
+Server:        192.168.10.101
+Address:    192.168.10.101#53
+Name:    mail.netskills.net
+Address: 192.168.10.101
+&gt; set q=mx
+&gt; 192.168.10.101
+Server:        192.168.10.101
+Address:    192.168.10.101#53
+101.10.168.192.in-addr.arpa    name = mail.netskills.net.
+</code></pre>
+<h2 id="Email-服务"><a href="#Email-服务" class="headerlink" title="Email 服务"></a>Email 服务</h2><h3 id="邮件传输软件"><a href="#邮件传输软件" class="headerlink" title="邮件传输软件"></a>邮件传输软件</h3><p>安装 <em>Postfix</em>，其是一种电子邮件服务器；为改良 <em>sendmail</em> 而产生。</p>
+<pre><code class="bash">[root@mail ~]# yum install postfix
+</code></pre>
+<p><em>Postfix</em> 可以调用本地系统的账户和密码，因此在本地系统创建常规账户即可。</p>
+<pre><code class="bash">[root@mail ~]# useradd mail4
+[root@mail ~]# useradd mail5
+[root@mail ~]# useradd mail6
+[root@mail ~]# echo &quot;789&quot; | passwd --stdin mail4
+[root@mail ~]# echo &quot;789&quot; | passwd --stdin mail5
+[root@mail ~]# echo &quot;789&quot; | passwd --stdin mail6
+# 这种方式给用户设置密码并不推荐，不太安全
+[root@mail ~]# usermod -s /sbin/nologin mail4
+[root@mail ~]# usermod -s /sbin/nologin mail5
+[root@mail ~]# usermod -s /sbin/nologin mail6
+</code></pre>
+<p>修改并完善主配置文件。</p>
+<pre><code class="bash">[root@mail ~] # vim /etc/postfix/main.cf
+myhostname = mail.netskills.net
+# mydomain 变量其实就是邮箱地址后缀
+mydomain = netskills.net
+myorigin = $mydomain
+inet_interfaces = all
+mydestination = $myhostname, $mydomain
+mynetworks = 192.168.10.0/24, 127.0.0.0/8
+home_mailbox = Maildir/
+[root@mail ~]# systemctl restart postfix
+[root@mail ~]# systemctl enable postfix
+</code></pre>
+<p>设置邮件服务黑名单策略，拒收来自 <em>mail5</em> 用户的邮件。</p>
+<pre><code class="bash">[root@mail ~]# echo &quot;smtpd_sender_restrictions = check_sender_access hash:/etc/postfix/sender_access&quot; &gt;&gt; /etc/postfix/main.cf
+[root@mail ~]# echo &quot;mail5@netskills.net REJECT&quot; &gt;&gt; /etc/postfix/sender_access
+[root@mail ~]# cat /etc/postfix/sender_access
+mail5@netskills.net    REJECT
+[root@mail ~]# postmap /etc/postfix/sender_access
+[root@mail ~]# systemctl restart postfix.service
+</code></pre>
+<p>  <strong>验证：</strong></p>
+<pre><code class="bash">[root@mail ~]# yum install telnet
+[root@mail ~]# telnet localhost smtp
+Trying ::1...
+Connected to localhost.
+Escape character is &#39;^]&#39;.
+220 mail.netskills.net ESMTP Postfix
+helo localhost
+250 mail.netskills.net
+MAIL FROM: mail5@netskills.net
+250 2.1.0 Ok
+RCPT TO: mail4@netskills.net
+554 5.7.1 &lt;mail5@netskills.net&gt;: Sender address rejected: Access denied
+</code></pre>
+<h3 id="创建自签名-SSL-证书。"><a href="#创建自签名-SSL-证书。" class="headerlink" title="创建自签名 SSL 证书。"></a>创建自签名 SSL 证书。</h3><p><strong>文件后缀：</strong><br><code>.key</code>：一般指私钥文件。</p>
+<p><code>.csr</code>：证书请求文件。</p>
+<p><code>.crt</code>：证书文件，certificate 的缩写。</p>
+<p>关于【<strong>证书申请文件</strong>】（CSR）；首先需要先创建一个【<strong>私钥</strong>】（key），根据私钥生成 CSR。CSR 的主要内容是密钥对中的公钥，以及一些额外的信息 —— 最后这些内容都将在签名时插入到证书里。</p>
+<p>创建一个<strong>【秘/私钥】</strong>，通过回显可以看出还是调用 <em>openssl</em> 命令生成的私钥。</p>
+<pre><code class="bash">[root@mail ~]# cd /etc/pki/tls/certs/
+[root@mail certs]# make server.key
+umask 77 ; \
+/usr/bin/openssl genrsa -aes128 2048 &gt; server.key
+Generating RSA private key, 2048 bit long modulus
+.........................+++
+.+++
+e is 65537 (0x10001)
+Enter pass phrase:               # dcncloud
+Verifying - Enter pass phrase:   # dcncloud
+
+# 从私钥中删除密码
+[root@mail certs]# openssl rsa -in server.key -out server.key 
+Enter pass phrase for server.key: # dcncloud
+writing RSA key
+</code></pre>
+<p>  根据私钥 <em>server.key</em> 生成证书申请文件 <em>server.csr</em>。</p>
+<pre><code class="bash">[root@mail certs]# make server.csr
+umask 77 ; \
+/usr/bin/openssl req -utf8 -new -key server.key -out server.csr
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter &#39;.&#39;, the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:CN
+State or Province Name (full name) []:Shanghai
+Locality Name (eg, city) [Default City]:W
+Organization Name (eg, company) [Default Company Ltd]:DCN
+Organizational Unit Name (eg, section) []:netskills
+Common Name (eg, your name or your server&#39;s hostname) []:netskills.net
+Email Address []:root@netskills.net
+Please enter the following &#39;extra&#39; attributes
+to be sent with your certificate request
+A challenge password []:      # 回车
+An optional company name []:  # 回车
+</code></pre>
+<p>  使用私钥 <em>server.key</em> 对证书申请进行签名从而生成证书 <strong>server.crt</strong> 。</p>
+<pre><code class="bash">[root@mail certs]# openssl x509 -in server.csr -out server.crt -req -signkey server.key -days 3650
+Signature ok
+subject=/C=CN/ST=Shanghai/L=W/O=DCN/OU=netskills/CN=netskills.net/emailAddress=root@netskills.net
+Getting Private key
+[root@mail certs]# ls
+ca-bundle.crt        make-dummy-cert  renew-dummy-cert  server.csr
+ca-bundle.trust.crt  Makefile         server.crt        server.key
+</code></pre>
+<h3 id="关于-SMTPS"><a href="#关于-SMTPS" class="headerlink" title="关于 SMTPS"></a>关于 SMTPS</h3><p><strong>SMTPS（Simple Mail Transfer Protocol Secure）</strong>是一种使用<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Transport_layer_security">传输层安全性</a>保护 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol">SMTP</a> 的方法。它旨在提供通信伙伴的<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Authentication">身份验证</a>，以及<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Data_integrity">数据完整性</a>和<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Confidentiality">机密性</a>。</p>
+<p>SMTPS 不是专有协议，也不是 SMTP 的扩展。通过将 SMTP 包装在 TLS 中，这是一种在<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/OSI_model#Layer_4:_transport_layer">传输层</a>保护 SMTP 的方法。从概念上讲，它类似于 HTTPS ；在 TLS 中包装 HTTP 的方式。</p>
+<p><strong>参考来源：</strong><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/SMTPS">https://en.wikipedia.org/wiki/SMTPS</a></p>
+<h4 id="为什么启用-SMTPS"><a href="#为什么启用-SMTPS" class="headerlink" title="为什么启用 SMTPS ? ? ?"></a>为什么启用 SMTPS ? ? ?</h4><p>用作提交协议的 SMTPS 令人困惑，让我解释，最初于1997年，IANA（互联网号码分配机构）为 SMTPS 分配了465端口，旨在用于加密一个 SMTP 服务器与另一个 SMTP 服务器之间的通信，如 mail.google.com 和 mail.yahoo.com，后来，STARTTLS 出现了，它允许 SMTP 服务器通过现有的 SMTP 端口25安全地相互通信，因此不再需要将465端口专用于安全 SMTP，SMTPS 端口已被撤销，但是，某些邮件客户端（如Microsoft Outlook）错误地将 SMTPS 解释为提交，并使用465端口进行电子邮件提交，直到今天仍然如此。</p>
+<p><strong>参考来源：</strong><a target="_blank" rel="noopener" href="https://ywnz.com/linuxyffq/4817.html%E3%80%82">https://ywnz.com/linuxyffq/4817.html。</a></p>
+<p>哦！原来这是个已弃用的协议？</p>
+<p>编辑 <em>postfix</em> 主配置文件，添加 SMTP 认证相关的 SASL 功能参数以及 SSL 证书路径。</p>
+<pre><code class="bash">[root@mail ~]# vim /etc/postfix/main.cf
+# SMTP-Auth
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_local_domain = $myhostname
+
+# SSL
+smtpd_use_tls = yes
+smtpd_tls_cert_file = /etc/pki/tls/certs/server.crt
+smtpd_tls_key_file = /etc/pki/tls/certs/server.key
+</code></pre>
+<p>编辑 postfix 的 master 进程配置文件，取消相关注释；使其对 SMTPS 的支持。</p>
+<pre><code class="bash">[root@mail ~]# vim /etc/postfix/master.cf
+submission inet n       -       n       -       -       smtpd
+  -o syslog_name=postfix/submission
+
+smtps     inet  n       -       n       -       -       smtpd
+  -o syslog_name=postfix/smtps
+  -o smtpd_tls_wrappermode=yes
+  -o smtpd_sasl_auth_enable=yes
+[root@mail ~]# systemctl restart postfix
+</code></pre>
+<p>可以看出 SMTPS 默认端口465是帧听状态滴。</p>
+<pre><code class="bash">[root@mail ~]# netstat -pantu | grep master
+tcp    0    0 0.0.0.0:25    0.0.0.0:*    LISTEN      12816/master 
+tcp    0    0 0.0.0.0:587   0.0.0.0:*    LISTEN      12816/master 
+tcp    0    0 0.0.0.0:465   0.0.0.0:*    LISTEN      12816/master 
+tcp6   0    0 :::25         :::*         LISTEN      12816/master 
+tcp6   0    0 :::587        :::*         LISTEN      12816/master 
+tcp6   0    0 :::465        :::*         LISTEN      12816/master
+</code></pre>
+<h3 id="关于-POP3S"><a href="#关于-POP3S" class="headerlink" title="关于 POP3S"></a>关于 POP3S</h3><p><strong>POP3S (POP3-over-SSL/TLS)</strong> 是指用于将电子邮件传输协议 POP3 扩展为 SSL / TLS 加密的网络协议。通常，POP3S 默认在端口 995 上使用 TCP。</p>
+<p>POP3S 默认端口 995；连接方式为 SSL / TLS， STARTTLS 不可用。认证方式为普通密码。 </p>
+<h4 id="Why-POP3S"><a href="#Why-POP3S" class="headerlink" title="Why POP3S ? ? ?"></a><strong>Why POP3S ? ? ?</strong></h4><p>虽然 POP3 服务器要求客户端使用用户名和密码进行身份验证，但由于 POP3 是一种未加密的协议；用户名密码都是<strong>【明文传输】</strong>滴！</p>
+<p>POP3S is POP3 over SSL/TLS。它为邮件协议提供了一个<strong>【加密连接】</strong>，通过该连接可以传输用户名和密码以进行身份验证。</p>
+<h4 id="开源-POP3-服务器"><a href="#开源-POP3-服务器" class="headerlink" title="开源 POP3 服务器"></a>开源 POP3 服务器</h4><p>安装 dovecot（一款开源 IMAP、POP3 服务器），编辑其配置文件。</p>
+<pre><code class="bash">[root@mail ~]# yum install dovecot
+[root@mail ~]# vim /etc/dovecot/dovecot.conf
+# 由题要求，仅配置 pop3 协议支持
+protocols = pop3
+
+listen = *
+</code></pre>
+<p>编辑认证配置文件。</p>
+<pre><code class="bash">[root@mail ~]# vim /etc/dovecot/conf.d/10-auth.conf
+# 允许明文认证
+disable_plaintext_auth = no
+</code></pre>
+<p>邮件的相关配置。</p>
+<pre><code class="bash">[root@mail ~]# vim /etc/dovecot/conf.d/10-mail.conf
+# 用户邮件存放的目录
+mail_location = maildir:~/Maildir
+</code></pre>
+<p>认证相关配置。</p>
+<pre><code class="bash">[root@mail ~]# vim /etc/dovecot/conf.d/10-master.conf
+# pop3s auth
+service pop3-login &#123;
+  inet_listener pop3 &#123;
+    port = 0
+  &#125;
+  inet_listener pop3s &#123;
+    port = 995
+    ssl = yes
+  &#125;
+&#125;
+
+# Postfix smtp-auth
+unix_listener /var/spool/postfix/private/auth &#123;
+  mode = 0666
+  user = postfix
+  group = postfix
+&#125;
+</code></pre>
+<p>证书相关配置。</p>
+<pre><code class="bash">[root@mail ~]# vim /etc/dovecot/conf.d/10-ssl.conf
+ssl = yes
+
+ssl_cert = &lt;/etc/pki/tls/certs/server.crt
+ssl_key = &lt;/etc/pki/tls/certs/server.key
+</code></pre>
+<p>查看端口，可以看出仅帧听了默认端口为995的 POP3S。 </p>
+<pre><code class="bash">[root@mail ~]# netstat -pantu | grep dovecot
+tcp   0   0 0.0.0.0:995    0.0.0.0:*    LISTEN    13300/dovecot
+</code></pre>
+<h3 id="验证环节"><a href="#验证环节" class="headerlink" title="验证环节"></a>验证环节</h3><p>验证使用 <em>Windows</em> 上的一款 <em>Thundbird</em> 邮件客户端。</p>
+<p>当网络及 DNS 等一切设置正常后；打开客户端软件会自动弹出这个<strong>【添加安全例外】</strong>，因为证书是自签名，并不被客户端信任。请<strong>疯狂</strong>点击 <u>确认安全例外</u>。</p>
+<p><img src="/" class="lazyload" data-src="http://i1.wp.com/ww1.sinaimg.cn/large/006V665tgy1g6x7rcztmej30zi0obmxi.jpg"  alt="POP3S"></p>
+<p>然后开始登录邮箱用户。如下图所示，POP3S(POP3-over-SSL/TLS) 默认端口为995，SMTPS(SMTP+TLS) 默认端口为465；验证方式为普通密码。直接点击<strong>完成</strong>，不必重新测试。</p>
+<p><img src="/" class="lazyload" data-src="http://i1.wp.com/ww1.sinaimg.cn/large/006V665tgy1g6x7reqiauj30zl0obwey.jpg"  alt="Login"></p>
+<p>如下，当用户发送邮件时可能弹出以下界面；同上，自签名证书不被信任。</p>
+<p><img src="/" class="lazyload" data-src="http://i1.wp.com/ww1.sinaimg.cn/large/006V665tgy1g6x7rcy5utj30zk0obgm3.jpg"  alt="SMTPS"></p>
+<p>测试发送邮件。</p>
+<p><img src="/" class="lazyload" data-src="http://i1.wp.com/ww1.sinaimg.cn/large/006V665tgy1g6x7rcy3anj313m0p5dgd.jpg"  alt="Send"></p>
+<p>成功接受邮件！！！</p>
+<p><img src="/" class="lazyload" data-src="http://i1.wp.com/ww1.sinaimg.cn/large/006V665tgy1g6x7rcyhm1j313p0p5t96.jpg"  alt="Received"></p>
+</div><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:fanqxu@gmail.com">_0xf4n9x_</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://fanqxu.github.io/2019/09/09/Email-server/">https://fanqxu.github.io/2019/09/09/Email-server/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/linux/">linux</a></div><div class="post_share"><div class="social-share" data-image="/gallery/vulfocus.gif" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css"/><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js"></script></div></div><nav class="pagination_post" id="pagination"><div class="prev-post pull_left"><a href="/2019/10/14/SQLi-FirstTest/"><img class="prev_cover lazyload" data-src="/gallery/css12sqli.webp" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">SQL注入之校园监控器</div></div></a></div><div class="next-post pull_right"><a href="/2019/08/14/PenTest/"><img class="next_cover lazyload" data-src="/gallery/conn.webp" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">针对校园某服务器的一次渗透测试</div></div></a></div></nav><div class="relatedPosts"><div class="relatedPosts_headline"><i class="fa fa-fw fa-thumbs-up" aria-hidden="true"></i><span> Recommend</span></div><div class="relatedPosts_list"><div class="relatedPosts_item"><a href="/2021/01/03/linuxRimeInput/" title="Xfce桌面下Kali Linux的中文输入法配置"><img class="relatedPosts_cover lazyload"data-src="/gallery/rime.png"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2021-01-03</div><div class="relatedPosts_title">Xfce桌面下Kali Linux的中文输入法配置</div></div></a></div><div class="relatedPosts_item"><a href="/2019/04/26/linux-optimization/" title="Linux桌面性能瓶颈优化"><img class="relatedPosts_cover lazyload"data-src="/gallery/linux_optimization.webp"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2019-04-26</div><div class="relatedPosts_title">Linux桌面性能瓶颈优化</div></div></a></div></div><div class="clear_both"></div></div><hr><div id="post-comment"><div class="comment_headling"><i class="fa fa-comments fa-fw" aria-hidden="true"></i><span> Comment</span></div><div class="vcomment" id="vcomment"></div><script src="https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js"></script><script>var GUEST_INFO = ['nick','mail','link'];
+var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+  return GUEST_INFO.indexOf(item) > -1
+});
+guest_info = guest_info.length == 0 ? GUEST_INFO :guest_info;
+
+window.valine = new Valine({
+  el:'#vcomment',
+  notify: true,
+  verify: true,
+  appId: 'sr3jdB7UEto7mridvIc0wVsa-gzGzoHsz',
+  appKey: 'XhGF68GD6Pz8U5XewWhjcL8j',
+  placeholder: 'Please leave your footprints',
+  avatar: 'monsterid',
+  meta: guest_info,
+  pageSize: '10',
+  lang: 'en',
+  recordIP: true,
+  serverURLs: ''
+});</script></div></article></main><footer id="footer" style="background-image: url(/gallery/email.webp)" data-type="photo"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2021 By _0xf4n9x_</div><div class="framework-info"><span>Driven </span><a target="_blank" rel="noopener" href="https://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly"><span>Butterfly</span></a></div><div class="icp"><a><img class="icp-icon" src="/img/icp.png"/><span>备个🔨案</span></a></div></div></footer></div><section class="rightside" id="rightside"><div id="rightside-config-hide"><i class="fa fa-plus" id="font_plus" title="Increase font size"></i><i class="fa fa-minus" id="font_minus" title="Decrease font size"></i><a class="translate_chn_to_cht" id="translateLink" href="javascript:translatePage();" title="Traditional Chinese and Simplified Chinese Conversion" target="_self">繁</a><i class="darkmode fa fa-moon-o" id="darkmode" title="Dark Mode"></i></div><div id="rightside-config-show"><div id="rightside_config" title="Setting"><i class="fa fa-cog" aria-hidden="true"></i></div><a id="to_comment" href="#post-comment" title="Scroll to comment"><i class="scroll_to_comment fa fa-comments">  </i></a><i class="fa fa-list-ul close" id="mobile-toc-button" title="Table of Contents" aria-hidden="true"></i><i class="fa fa-arrow-up" id="go-up" title="Back to top" aria-hidden="true"></i></div></section><div class="search-dialog" id="local-search"><div class="search-dialog__title" id="local-search-title">Local search</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="Search for Posts" type="text"/></div></div></div><hr/><div id="local-search-results"><div id="local-hits"></div><div id="local-stats"><div class="local-search-stats__hr" id="hr"><span>Powered by</span> <a target="_blank" rel="noopener" href="https://github.com/wzpan/hexo-generator-search" style="color:#49B1F5;">hexo-generator-search</a></div></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@latest/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/lazysizes@latest/lazysizes.min.js" async=""></script><script src="/js/search/local-search.js"></script></body></html>

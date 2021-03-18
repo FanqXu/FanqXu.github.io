@@ -1,0 +1,303 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Linux桌面性能瓶颈优化 | _0xf4n9x_'s Blog</title><meta name="description" content="深度优化"><meta name="keywords" content="linux"><meta name="author" content="_0xf4n9x_,fanqxu@gmail.com"><meta name="copyright" content="_0xf4n9x_"><meta name="format-detection" content="telephone=no"><link rel="shortcut icon" href="/img/favicon.ico"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://www.google-analytics.com" crossorigin="crossorigin"/><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="crossorigin"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Linux桌面性能瓶颈优化"><meta name="twitter:description" content="深度优化"><meta name="twitter:image" content="https://fanqxu.github.io/gallery/linux_optimization.webp"><script src="https://cdn.jsdelivr.net/npm/js-cookie/dist/js.cookie.min.js"></script><script>var autoChangeMode = '2'
+var t = Cookies.get("theme")
+if (autoChangeMode == '1'){
+  var isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+  var isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches
+  var isNotSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches
+  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+  if (t === undefined){
+    if (isLightMode) activateLightMode()
+    else if (isDarkMode) activateDarkMode()
+    else if (isNotSpecified || hasNoSupport){
+      console.log('You specified no preference for a color scheme or your browser does not support it. I Schedule dark mode during night time.')
+      var now = new Date()
+      var hour = now.getHours()
+      var isNight = hour < 6 || hour >= 18
+      isNight ? activateDarkMode() : activateLightMode()
+  }
+  } else if (t == 'light') activateLightMode()
+  else activateDarkMode()
+
+} else if (autoChangeMode == '2'){
+  now = new Date();
+  hour = now.getHours();
+  isNight = hour < 6 || hour >= 18
+  if(t === undefined) isNight? activateDarkMode() : activateLightMode()
+  else if (t === 'light') activateLightMode()
+  else activateDarkMode() 
+} else {
+  if ( t == 'dark' ) activateDarkMode()
+  else if ( t == 'light') activateLightMode()
+}
+
+function activateDarkMode(){
+  document.documentElement.setAttribute('data-theme', 'dark')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+    document.querySelector('meta[name="theme-color"]').setAttribute('content','#000')
+  }
+}
+function activateLightMode(){
+  document.documentElement.setAttribute('data-theme', 'light')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+  document.querySelector('meta[name="theme-color"]').setAttribute('content','#fff')
+  }
+}</script><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css"><link rel="canonical" href="https://fanqxu.github.io/2019/04/26/linux-optimization/"><link rel="prev" title="一些Chrome扩展推荐" href="https://fanqxu.github.io/2019/07/10/My-Chrome-Extensions/"><link rel="next" title="瑞士军刀NETCAT使用笔记" href="https://fanqxu.github.io/2019/04/20/NETCAT-%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-131397348-1', 'auto');
+ga('send', 'pageview');
+</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"We didn't find any results for the search: ${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"cookieDomain":"https://fanqxu.github.io/","msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  bookmark: {
+    message_prev: 'Press',
+    message_next: 'to bookmark this page'
+  },
+  runtime_unit: 'days',
+  runtime: false,
+  copyright: undefined,
+  ClickShowText: undefined,
+  medium_zoom: false,
+  fancybox: true,
+  Snackbar: undefined,
+  baiduPush: false,
+  highlightCopy: true,
+  highlightLang: true,
+  highlightShrink: 'false',
+  isFontAwesomeV5: false,
+  isPhotoFigcaption: false
+  
+}</script><script>var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isSidebar: true  
+  }</script><noscript><style>
+#page-header {
+  opacity: 1
+}
+.justified-gallery img{
+  opacity: 1
+}
+</style></noscript><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="_0xf4n9x_'s Blog" type="application/atom+xml">
+</head><body><div id="mobile-sidebar"><div id="menu_mask"></div><div id="mobile-sidebar-menus"><div class="mobile_author_icon"><img class="avatar-img" src="/img/avatar.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="mobile_post_data"><div class="mobile_data_item is-center"><div class="mobile_data_link"><a href="/archives/"><div class="headline">Articles</div><div class="length_num">26</div></a></div></div><div class="mobile_data_item is-center">      <div class="mobile_data_link"><a href="/tags/"><div class="headline">Tags</div><div class="length_num">26</div></a></div></div><div class="mobile_data_item is-center">     <div class="mobile_data_link"><a href="/categories/"><div class="headline">Categories</div><div class="length_num">5</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> Links</span></a></div><div class="menus_item"><a class="site-page" href="/lab/"><i class="fa-fw fa fa fa-flask"></i><span> Labs</span></a></div><div class="menus_item"><a class="site-page"><i class="fa-fw fa fa-list" aria-hidden="true"></i><span> About</span><i class="fa fa-chevron-down menus-expand" aria-hidden="true"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/books/"><i class="fa-fw fa fa-book"></i><span> Books</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-film"></i><span> Movies</span></a></li><li><a class="site-page" href="/about/"><i class="fa-fw fa fa-user"></i><span> Me</span></a></li></ul></div></div></div></div><i class="fa fa-arrow-right on" id="toggle-sidebar" aria-hidden="true">     </i><div id="sidebar"><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar">     </div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-SSD-%E7%A1%AC%E7%9B%98"><span class="toc-number">1.</span> <span class="toc-text">0x00 SSD 硬盘</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E5%8C%BA%E5%AF%B9%E9%BD%90"><span class="toc-number">1.1.</span> <span class="toc-text">分区对齐</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%8E%9F%E5%88%99"><span class="toc-number">1.2.</span> <span class="toc-text">优化原则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.3.</span> <span class="toc-text">文件系统类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A6%81%E7%94%A8%E5%86%99%E6%93%8D%E4%BD%9C"><span class="toc-number">1.4.</span> <span class="toc-text">禁用写操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E6%88%B3"><span class="toc-number">1.4.1.</span> <span class="toc-text">时间戳</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A6%81%E7%94%A8%E4%BC%91%E7%9C%A0"><span class="toc-number">1.4.2.</span> <span class="toc-text">禁用休眠</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A2%8E%E7%89%87%E6%95%B4%E7%90%86"><span class="toc-number">1.4.3.</span> <span class="toc-text">碎片整理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TRIM-%E5%AE%9A%E6%9C%9F%E6%B8%85%E7%90%86%E7%A3%81%E7%9B%98"><span class="toc-number">1.5.</span> <span class="toc-text">TRIM 定期清理磁盘</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A1%AC%E7%9B%98%E7%BC%93%E5%AD%98"><span class="toc-number">1.6.</span> <span class="toc-text">硬盘缓存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-CPU"><span class="toc-number">2.</span> <span class="toc-text">0x01 CPU</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E5%BE%AE%E7%A0%81"><span class="toc-number">2.1.</span> <span class="toc-text">安装微码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B8%A9%E5%BA%A6%E7%9B%91%E8%A7%86"><span class="toc-number">2.2.</span> <span class="toc-text">温度监视</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96"><span class="toc-number">3.</span> <span class="toc-text">0x02 内存优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%90%E5%88%B6-inode-%E7%BC%93%E5%AD%98"><span class="toc-number">3.1.</span> <span class="toc-text">限制 inode 缓存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Tmp-%E6%94%BE%E5%85%A5%E5%86%85%E5%AD%98"><span class="toc-number">3.2.</span> <span class="toc-text">Tmp 放入内存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-SWAP-%E5%88%86%E5%8C%BA"><span class="toc-number">4.</span> <span class="toc-text">0x03 SWAP 分区</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E6%98%BE%E7%A4%BA%E6%92%95%E8%A3%82"><span class="toc-number">5.</span> <span class="toc-text">0x04 显示撕裂</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E5%90%AF%E5%8A%A8%E9%A1%B9%E4%BC%98%E5%8C%96"><span class="toc-number">6.</span> <span class="toc-text">0x05 启动项优化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x06-%E6%B5%8F%E8%A7%88%E5%99%A8%E4%BC%98%E5%8C%96"><span class="toc-number">7.</span> <span class="toc-text">0x06 浏览器优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%90%E5%88%B6-Firefox-%E5%86%99%E6%93%8D%E4%BD%9C"><span class="toc-number">7.1.</span> <span class="toc-text">限制 Firefox 写操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A6%81%E7%94%A8-Firefox-sessionstore"><span class="toc-number">7.2.</span> <span class="toc-text">禁用 Firefox sessionstore</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A6%81%E7%94%A8%E6%97%A0%E5%BF%85%E8%A6%81%E7%BD%91%E7%BB%9C%E8%AE%BF%E9%97%AE"><span class="toc-number">7.3.</span> <span class="toc-text">禁用无必要网络访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%90%E5%88%B6-Chrome-%E5%86%99%E6%93%8D%E4%BD%9C"><span class="toc-number">7.4.</span> <span class="toc-text">限制 Chrome 写操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x07-%E7%B3%BB%E7%BB%9F%E6%B8%85%E7%90%86"><span class="toc-number">8.</span> <span class="toc-text">0x07 系统清理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Stacer"><span class="toc-number">8.1.</span> <span class="toc-text">Stacer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bleachbit"><span class="toc-number">8.2.</span> <span class="toc-text">Bleachbit</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x08-%E4%BC%98%E5%8C%96%E7%94%B5%E6%B1%A0%E5%AF%BF%E5%91%BD"><span class="toc-number">9.</span> <span class="toc-text">0x08 优化电池寿命</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%80%A6%E2%80%A6"><span class="toc-number">9.0.1.</span> <span class="toc-text">……</span></a></li></ol></li></ol></li></ol></div></div></div><div id="body-wrap"><div class="post-bg" id="nav" style="background-image: url(/gallery/linux_optimization.webp)"><div id="page-header"><span class="pull_left" id="blog_name"><a class="blog_title" id="site-name" href="/">_0xf4n9x_'s Blog</a></span><span class="pull_right menus"><div id="search_button"><a class="site-page social-icon search"><i class="fa fa-search fa-fw"></i><span> Search</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> Links</span></a></div><div class="menus_item"><a class="site-page" href="/lab/"><i class="fa-fw fa fa fa-flask"></i><span> Labs</span></a></div><div class="menus_item"><a class="site-page"><i class="fa-fw fa fa-list" aria-hidden="true"></i><span> About</span><i class="fa fa-chevron-down menus-expand" aria-hidden="true"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/books/"><i class="fa-fw fa fa-book"></i><span> Books</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-film"></i><span> Movies</span></a></li><li><a class="site-page" href="/about/"><i class="fa-fw fa fa-user"></i><span> Me</span></a></li></ul></div></div><span class="toggle-menu close"><a class="site-page"><i class="fa fa-bars fa-fw" aria-hidden="true"></i></a></span></span></div><div id="post-info"><div id="post-title"><div class="posttitle">Linux桌面性能瓶颈优化</div></div><div id="post-meta"><div class="meta-firstline"><time class="post-meta__date"><span class="post-meta__date-created" title="Created 2019-04-26 18:51:40"><i class="fa fa-calendar" aria-hidden="true"></i> Created 2019-04-26</span><span class="post-meta__separator">|</span><span class="post-meta__date-updated" title="Updated 2020-04-12 22:16:45"><i class="fa fa-history" aria-hidden="true"></i> Updated 2020-04-12</span></time></div><div class="meta-secondline"> </div><div class="meta-thirdline"><span class="post-meta-pv-cv"><i class="fa fa-eye post-meta__icon" aria-hidden="true"> </i><span>Post View:</span><span id="busuanzi_value_page_pv"></span></span><span class="post-meta-commentcount"><span class="post-meta__separator">|</span><i class="post-meta__icon fa fa-comment-o" aria-hidden="true"></i><span>Comments:</span><a href="/2019/04/26/linux-optimization/#post-comment" itemprop="discussionUrl"><span class="valine-comment-count comment-count" data-xid="/2019/04/26/linux-optimization/" itemprop="commentCount"></span></a></span></div></div></div></div><main class="layout_post" id="content-inner"><article id="post"><div id="article-container"><blockquote>
+<p>将曾经使用 Ubuntu 的经验记录下来，并分享出去。</p>
+<p>当然此文并不限于 Ubuntu。</p>
+</blockquote>
+<h2 id="0x00-SSD-硬盘"><a href="#0x00-SSD-硬盘" class="headerlink" title="0x00 SSD 硬盘"></a>0x00 SSD 硬盘</h2><h3 id="分区对齐"><a href="#分区对齐" class="headerlink" title="分区对齐"></a>分区对齐</h3><p>关于如今的固态硬盘，已不再需要手动分区对齐。因为目前主流 Linux 系统都已自动对齐文件系统和分区【<strong>页面大小4096字节</strong>】。</p>
+<h3 id="优化原则"><a href="#优化原则" class="headerlink" title="优化原则"></a>优化原则</h3><p>由于频繁写操作会磨损固态硬盘，所以对于其优化原则就是：【<strong>尽量减少写操作</strong>】。</p>
+<span id="more"></span>
+
+<h3 id="文件系统类型"><a href="#文件系统类型" class="headerlink" title="文件系统类型"></a>文件系统类型</h3><p>而对于文件系统类型，墙裂推荐【<strong>EXT4</strong>】，EXT4 文件系统的日志会对硬盘多产生一些写操作，但不会太多；</p>
+<h3 id="禁用写操作"><a href="#禁用写操作" class="headerlink" title="禁用写操作"></a>禁用写操作</h3><h4 id="时间戳"><a href="#时间戳" class="headerlink" title="时间戳"></a>时间戳</h4><p>操作系统在对于文件读取时，同时还会对文件的时间戳进行一个写操作；而这个写操作的意义是很小的，所以关闭。</p>
+<p>编辑分区表，为你的<strong>根分区</strong>和 <strong>Home 分区</strong> 都增加 noatime 选项。</p>
+<pre><code class="shell">$ sudo vim /etc/fstab
+</code></pre>
+<p>如下，由于我并没有将 <strong>Home</strong> 分区单独分出来，所有仅在 / 分区的 <em>options</em> 位置添加了 <strong>noatime</strong>。</p>
+<pre><code class="bash"># &lt;file system&gt; &lt;dir&gt; &lt;type&gt; &lt;options&gt; &lt;dump&gt; &lt;pass&gt;
+# /dev/sda1
+UUID=4a7fcb3e-fdcc-4c03-9ee3-de3c5ds3da30    /             ext4          noatime,rw,relatime    0 1
+
+# /dev/sda2
+UUID=F06E-6942          /boot/EFI     vfat          rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,utf8,errors=remount-ro    0 2
+
+# /dev/sda3
+UUID=c9e9e9d5-cde4-4ab4-adf9-027d56384e10    none          swap          defaults      0 0
+</code></pre>
+<h4 id="禁用休眠"><a href="#禁用休眠" class="headerlink" title="禁用休眠"></a>禁用休眠</h4><p>计算机休眠挂起会导致磁盘进行大量的写操作，不过 Ubuntu 默认关闭。</p>
+<h4 id="碎片整理"><a href="#碎片整理" class="headerlink" title="碎片整理"></a>碎片整理</h4><p>Linux 下<strong>不必要进行碎片整理</strong>，非但不必要，而且还得<strong>避免碎片整理</strong>。碎片整理会导致大量的写操作，对 SSD 是致命伤害。</p>
+<h3 id="TRIM-定期清理磁盘"><a href="#TRIM-定期清理磁盘" class="headerlink" title="TRIM 定期清理磁盘"></a>TRIM 定期清理磁盘</h3><p>Ubuntu 默认已经安装 TRIM，可通过一下命令查看是否支持。</p>
+<pre><code class="bash">$ sudo hdparm -I /dev/sda | grep TRIM
+       *    Data Set Management TRIM supported (limit 8 blocks)
+       *    Deterministic read ZEROs after TRIM
+</code></pre>
+<p>查看服务状态：</p>
+<pre><code class="bash">$ sudo systemctl status fstrim.service
+● fstrim.service - Discard unused blocks on filesystems from /etc/fstab
+   Loaded: loaded (/usr/lib/systemd/system/fstrim.service; static; vendor preset: disabled)
+   Active: inactive (dead)
+     Docs: man:fstrim(8)
+</code></pre>
+<p>此服务是关闭状态；因为默认一周清理一次，没必要时时对硬盘进行清理。</p>
+<p>指定根分区节点，手动清理：</p>
+<pre><code class="bash">$ sudo fstrim -v /
+</code></pre>
+<p>自定义每日清理：</p>
+<pre><code class="bash">$ sudo mkdir -v /etc/systemd/system/fstrim.timer.d
+$ sudo vim /etc/systemd/system/fstrim.timer.d/override.conf
+</code></pre>
+<p>添加如下几行：</p>
+<pre><code class="bash">[Timer]
+OnCalendar=
+OnCalendar=daily
+</code></pre>
+<h3 id="硬盘缓存"><a href="#硬盘缓存" class="headerlink" title="硬盘缓存"></a>硬盘缓存</h3><p>所谓缓存，其本质上就是一块内存空间；缓存机制会在 CPU 读取硬盘数据之前，提前将数据放入缓存之中；CPU 需要读取数据时，从而可以从缓存之中读取数据，进而从整体上提高系统的运行效率。此处缓存所指<strong>写缓存</strong>。</p>
+<p>程序在运行中，会等待数据在写入到硬盘之后才会进行下一步操作。因为数据如果不写入至硬盘，还停留在内存中，一旦断电内存中的数据就会丢失。Ubuntu 默认没有开启写缓存；而对于有电源的笔记本，这是不必要的。所以建议笔记本 Linux 用户开启写缓存。PC 台式机谨慎！！！</p>
+<p>打开 【<strong>Disks</strong>】工具，先在左侧选择你的磁盘，然后点击右上角。找到【<strong>Drive Setting</strong>】开启【<strong>Enable Write Cache</strong>】</p>
+<p><img src="/" class="lazyload" data-src="http://i1.wp.com/ww1.sinaimg.cn/large/006V665tgy1g2h32g0vchj30q70hp74r.jpg"  alt="Enable Write Cache"></p>
+<h2 id="0x01-CPU"><a href="#0x01-CPU" class="headerlink" title="0x01 CPU"></a>0x01 CPU</h2><h3 id="安装微码"><a href="#安装微码" class="headerlink" title="安装微码"></a>安装微码</h3><p>介于 CPU 的完全，建议安装微码安全补丁。</p>
+<p><strong>Intel</strong></p>
+<pre><code class="bash">$ sudo apt install intel-microcode
+</code></pre>
+<p><strong>AMD</strong></p>
+<pre><code class="bash">$ sudo apt install amd64-microcode
+</code></pre>
+<h3 id="温度监视"><a href="#温度监视" class="headerlink" title="温度监视"></a>温度监视</h3><p>安装一个温度监视器。</p>
+<pre><code class="bash">$ sudo apt install lm-sensors
+</code></pre>
+<p>查看：</p>
+<pre><code class="bash">$ sensors 
+coretemp-isa-0000
+Adapter: ISA adapter
+Package id 0:  +32.0°C  (high = +100.0°C, crit = +100.0°C)
+Core 0:        +30.0°C  (high = +100.0°C, crit = +100.0°C)
+Core 1:        +30.0°C  (high = +100.0°C, crit = +100.0°C)
+
+acpitz-acpi-0
+Adapter: ACPI interface
+temp1:        +32.0°C  (crit = +103.0°C)
+
+nouveau-pci-0100
+Adapter: PCI adapter
+GPU core:     +0.60 V  (min =  +0.60 V, max =  +1.20 V)
+
+iwlwifi-virtual-0
+Adapter: Virtual device
+temp1:        +27.0°C  
+
+pch_skylake-virtual-0
+Adapter: Virtual device
+temp1:        +27.5°C  
+</code></pre>
+<h2 id="0x02-内存优化"><a href="#0x02-内存优化" class="headerlink" title="0x02 内存优化"></a>0x02 内存优化</h2><h3 id="限制-inode-缓存"><a href="#限制-inode-缓存" class="headerlink" title="限制 inode 缓存"></a>限制 <strong>inode</strong> 缓存</h3><p>其实我也不太懂这是啥，便从维基上抄了下面这句话。</p>
+<blockquote>
+<p><strong>inode</strong>是指在许多“类<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Unix">Unix</a><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F">文件系统</a>”中的一种<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">数据结构</a>。每个inode保存了文件系统中的一个<strong>文件系统对象</strong>（包括<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%96%87%E4%BB%B6">文件</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%9B%AE%E5%BD%95_(%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F)">目录</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6">设备文件</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Unix%E5%9F%9F%E5%A5%97%E6%8E%A5%E5%AD%97">socket</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%AE%A1%E9%81%93_(Unix)">管道</a>, 等等）的元信息数据，但不包括数据内容或者文件名[<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Inode#cite_note-1">1]</a>。</p>
+</blockquote>
+<p>还是建议内存大一点的限制 <strong>inode</strong> 缓存，多大呢？大于4G吧。</p>
+<p>某些系统项将在内存中保留更长的时间。可使计算机速度有明显的提升。</p>
+<pre><code class="bash">$ sudo vim /etc/sysctl.conf
+</code></pre>
+<p>添加如下配置至尾行：</p>
+<pre><code class="bash">vm.vfs_cache_pressure=50
+</code></pre>
+<h3 id="Tmp-放入内存"><a href="#Tmp-放入内存" class="headerlink" title="Tmp 放入内存"></a>Tmp 放入内存</h3><p>Tmp 目录用于存放一些中间临时数据的目录，但是其位于硬盘，如果将其放入内存(Tmpfs)中，会大大提高一些数据读写的效率。还是建议内存大于8G的这么做。</p>
+<pre><code class="bash">$ sudo cp -v /usr/share/systemd/tmp.mount /etc/systemd/system/
+$ sudo systemctl enable tmp.mount
+</code></pre>
+<p>重启生效，查看状态：</p>
+<pre><code class="bash">$ systemctl status tmp.mount 
+● tmp.mount - /tmp
+   Loaded: loaded (/etc/fstab; generated)
+   Active: active (mounted) since Sat 2019-04-27 10:57:47 CST; 1h 20min ago
+    Where: /tmp
+     What: tmpfs
+     Docs: man:fstab(5)
+           man:systemd-fstab-generator(8)
+    Tasks: 0 (limit: 4915)
+   Memory: 32.0K
+   CGroup: /system.slice/tmp.mount
+
+Apr 27 10:57:47 4rch systemd[1]: Mounting /tmp...
+Apr 27 10:57:47 4rch systemd[1]: Mounted /tmp.
+</code></pre>
+<p>如何取消呢？只需将此文件删除即可。</p>
+<pre><code class="bash">$ sudo rm -v /etc/systemd/system/tmp.mount
+</code></pre>
+<h2 id="0x03-SWAP-分区"><a href="#0x03-SWAP-分区" class="headerlink" title="0x03 SWAP 分区"></a>0x03 SWAP 分区</h2><p>由于内存的有限，所有当运行一个很大的程序时，系统会将一部分内存交换至 swap 交换分区中； swap 分区即为硬盘，与内存相比较，在速度上是有很大的差距的。</p>
+<p>而且 Ubuntu 默认当还剩60%内存时就开始将一部分内存交换至 swap 分区中。</p>
+<pre><code class="bash">$ cat /proc/sys/vm/swappiness 
+60
+</code></pre>
+<p>修改 swappiness 参数。</p>
+<pre><code class="bash">$ sudo vim /etc/sysctl.conf
+</code></pre>
+<p>添加以下参数至以上配置文件的尾行。这个数值只是一个百分百，可以按照自己的需求自定义。</p>
+<pre><code class="bash">vm.swappiness=10
+</code></pre>
+<h2 id="0x04-显示撕裂"><a href="#0x04-显示撕裂" class="headerlink" title="0x04 显示撕裂"></a>0x04 显示撕裂</h2><p>在正确安装 NVIDIA 显卡驱动之后，依旧有时候会出现窗口撕裂的现象。（AMD 貌似没有这回事）</p>
+<p>这时就需要编辑 grub 配置文件来解决。</p>
+<pre><code class="bash">$ sudo vim /etc/default/grub
+</code></pre>
+<p>修改以下一行配置：</p>
+<pre><code class="bash">GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet&quot;
+</code></pre>
+<p>在 <code>quiet</code> 后增加 <code>nvidia-drm.modeset=1</code>，如下。</p>
+<pre><code class="bash">GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet nvidia-drm.modeset=1&quot;
+</code></pre>
+<p>然后更新 <strong>grub</strong>，重启生效。</p>
+<pre><code class="bash">$ update-grub &amp;&amp; reboot
+</code></pre>
+<p>验证：</p>
+<pre><code class="bash">$ xrandr --verbose | grep PRIME
+    PRIME Synchronization:1
+    PRIME Synchronization:1
+</code></pre>
+<h2 id="0x05-启动项优化"><a href="#0x05-启动项优化" class="headerlink" title="0x05 启动项优化"></a>0x05 启动项优化</h2><p>Linux 下很多启动(开机自启)项默认都是隐藏状态；使用一条替换命令，显示所有启动项。</p>
+<pre><code class="bash">$ sudo sed -i &#39;s/NoDisplay=true/NoDisplay=false/g&#39; /etc/xdg/autostart/*.desktop
+</code></pre>
+<p>然后打开 <strong>Startup Applications</strong>，按照个人需求自定义关闭不需要的启动项。</p>
+<h2 id="0x06-浏览器优化"><a href="#0x06-浏览器优化" class="headerlink" title="0x06 浏览器优化"></a>0x06 浏览器优化</h2><h3 id="限制-Firefox-写操作"><a href="#限制-Firefox-写操作" class="headerlink" title="限制 Firefox 写操作"></a>限制 Firefox 写操作</h3><p>将 Firefox 网络缓存放入内存中，可提高运行速度；</p>
+<p>首先打开 Firefox，在浏览器地址栏输入：</p>
+<pre><code class="firefox">about:config
+</code></pre>
+<p>回车，点击<code>I accept the risk</code>。</p>
+<p>搜索 <code>「browser.cache.disk.enable」</code>，双击将 <strong>Value</strong> 由 <code>true</code>变为<code>false</code>。</p>
+<p>再次搜索<code>「browser.cache.memory.enable」</code>，将 <strong>Value</strong> 变为<code>true</code>。</p>
+<p>再然后右击，点击<code>New</code>，选择<code>Integer</code>，输入<code>「browser.cache.memory.capacity」</code>，点击 <strong>OK</strong>，输入值<code>204800</code>。</p>
+<h3 id="禁用-Firefox-sessionstore"><a href="#禁用-Firefox-sessionstore" class="headerlink" title="禁用 Firefox sessionstore"></a>禁用 Firefox sessionstore</h3><p>由于恢复 Firefox 意外崩溃的回话会导致大量的写操作，这对于 SSD 硬盘是很受伤的，所以建议关闭。</p>
+<p>搜索 <code>「browser.sessionstore.interval」</code>，将原来的值<code>15000</code>修改为<code>15000000</code>。</p>
+<h3 id="禁用无必要网络访问"><a href="#禁用无必要网络访问" class="headerlink" title="禁用无必要网络访问"></a>禁用无必要网络访问</h3><p>对于使用 Firefox 来进行 Web 应用程序截断代理、漏洞挖掘。使用过 <strong>BurpSuite</strong> 就会知道，可能经常会抓到一些其他无相关的站点的数据包， 这是 Firefox 在后台偷偷地去请求一个网址。</p>
+<p>搜索<code>「network.captive-portal-service.enabled」</code>，双击将 <strong>Value</strong> 由 <code>true</code>变为<code>false</code>。</p>
+<h3 id="限制-Chrome-写操作"><a href="#限制-Chrome-写操作" class="headerlink" title="限制 Chrome 写操作"></a>限制 Chrome 写操作</h3><p><code>Settings</code>—-&gt;<code>Advanced</code>—-&gt;<code>Privacy</code>—-&gt;<code>Use a prediction service to load pages more quickly</code></p>
+<p>关闭此项。</p>
+<h2 id="0x07-系统清理"><a href="#0x07-系统清理" class="headerlink" title="0x07 系统清理"></a>0x07 系统清理</h2><p>清理系统不需要的缓存等等</p>
+<pre><code class="bash">$ sudo apt autoremove
+$ sudo apt autoclean
+</code></pre>
+<p>不得不承认这两条命令清理的并不彻底。</p>
+<h3 id="Stacer"><a href="#Stacer" class="headerlink" title="Stacer"></a>Stacer</h3><p><strong>Github：</strong><a target="_blank" rel="noopener" href="https://github.com/oguzhaninan/Stacer">github.com/oguzhaninan/Stacer</a></p>
+<p>从仓库主页 <strong>releases</strong> 中找到以 <strong>.deb</strong> 结尾的软件包，下载并安装。这款软件是图形化操作，界面比较友好。</p>
+<pre><code class="bash">$ sudo dpkg -i stacer_1.0.9_amd64.deb
+</code></pre>
+<h3 id="Bleachbit"><a href="#Bleachbit" class="headerlink" title="Bleachbit"></a>Bleachbit</h3><p>这款软件貌似系统自带，搜索打开即可使用。其界面并没有 <strong>Stacer</strong> 那么友好，但清理的特别彻底。</p>
+<p>关于系统清理，如果操作不当；轻则破坏你的个性化设置，严重可能会导致系统崩溃。请谨慎操作！！！</p>
+<h2 id="0x08-优化电池寿命"><a href="#0x08-优化电池寿命" class="headerlink" title="0x08 优化电池寿命"></a>0x08 优化电池寿命</h2><p>使用的是一种简单的办法。</p>
+<p>安装一个软件包，并将电池优化的工作交给它。</p>
+<pre><code class="bash">$ sudo apt install tlp tlp-rdw
+</code></pre>
+<p>然后启动它：</p>
+<pre><code class="bash">$ sudo tlp start
+TLP started in AC mode.
+</code></pre>
+<p>查看 <strong>tlp</strong> 状态：</p>
+<pre><code class="bash">$ sudo tlp-stat
+</code></pre>
+<h4 id="……"><a href="#……" class="headerlink" title="……"></a>……</h4></div><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:fanqxu@gmail.com">_0xf4n9x_</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://fanqxu.github.io/2019/04/26/linux-optimization/">https://fanqxu.github.io/2019/04/26/linux-optimization/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/linux/">linux</a></div><div class="post_share"><div class="social-share" data-image="/gallery/vulfocus.gif" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css"/><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js"></script></div></div><nav class="pagination_post" id="pagination"><div class="prev-post pull_left"><a href="/2019/07/10/My-Chrome-Extensions/"><img class="prev_cover lazyload" data-src="/gallery/chromextens.webp" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">一些Chrome扩展推荐</div></div></a></div><div class="next-post pull_right"><a href="/2019/04/20/NETCAT-%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/"><img class="next_cover lazyload" data-src="/gallery/netcat.webp" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">瑞士军刀NETCAT使用笔记</div></div></a></div></nav><div class="relatedPosts"><div class="relatedPosts_headline"><i class="fa fa-fw fa-thumbs-up" aria-hidden="true"></i><span> Recommend</span></div><div class="relatedPosts_list"><div class="relatedPosts_item"><a href="/2019/09/09/Email-server/" title="邮件服务部署及一丝感想"><img class="relatedPosts_cover lazyload"data-src="/gallery/email.webp"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2019-09-09</div><div class="relatedPosts_title">邮件服务部署及一丝感想</div></div></a></div><div class="relatedPosts_item"><a href="/2021/01/03/linuxRimeInput/" title="Xfce桌面下Kali Linux的中文输入法配置"><img class="relatedPosts_cover lazyload"data-src="/gallery/rime.png"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2021-01-03</div><div class="relatedPosts_title">Xfce桌面下Kali Linux的中文输入法配置</div></div></a></div></div><div class="clear_both"></div></div><hr><div id="post-comment"><div class="comment_headling"><i class="fa fa-comments fa-fw" aria-hidden="true"></i><span> Comment</span></div><div class="vcomment" id="vcomment"></div><script src="https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js"></script><script>var GUEST_INFO = ['nick','mail','link'];
+var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+  return GUEST_INFO.indexOf(item) > -1
+});
+guest_info = guest_info.length == 0 ? GUEST_INFO :guest_info;
+
+window.valine = new Valine({
+  el:'#vcomment',
+  notify: true,
+  verify: true,
+  appId: 'sr3jdB7UEto7mridvIc0wVsa-gzGzoHsz',
+  appKey: 'XhGF68GD6Pz8U5XewWhjcL8j',
+  placeholder: 'Please leave your footprints',
+  avatar: 'monsterid',
+  meta: guest_info,
+  pageSize: '10',
+  lang: 'en',
+  recordIP: true,
+  serverURLs: ''
+});</script></div></article></main><footer id="footer" style="background-image: url(/gallery/linux_optimization.webp)" data-type="photo"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2021 By _0xf4n9x_</div><div class="framework-info"><span>Driven </span><a target="_blank" rel="noopener" href="https://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly"><span>Butterfly</span></a></div><div class="icp"><a><img class="icp-icon" src="/img/icp.png"/><span>备个🔨案</span></a></div></div></footer></div><section class="rightside" id="rightside"><div id="rightside-config-hide"><i class="fa fa-plus" id="font_plus" title="Increase font size"></i><i class="fa fa-minus" id="font_minus" title="Decrease font size"></i><a class="translate_chn_to_cht" id="translateLink" href="javascript:translatePage();" title="Traditional Chinese and Simplified Chinese Conversion" target="_self">繁</a><i class="darkmode fa fa-moon-o" id="darkmode" title="Dark Mode"></i></div><div id="rightside-config-show"><div id="rightside_config" title="Setting"><i class="fa fa-cog" aria-hidden="true"></i></div><a id="to_comment" href="#post-comment" title="Scroll to comment"><i class="scroll_to_comment fa fa-comments">  </i></a><i class="fa fa-list-ul close" id="mobile-toc-button" title="Table of Contents" aria-hidden="true"></i><i class="fa fa-arrow-up" id="go-up" title="Back to top" aria-hidden="true"></i></div></section><div class="search-dialog" id="local-search"><div class="search-dialog__title" id="local-search-title">Local search</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="Search for Posts" type="text"/></div></div></div><hr/><div id="local-search-results"><div id="local-hits"></div><div id="local-stats"><div class="local-search-stats__hr" id="hr"><span>Powered by</span> <a target="_blank" rel="noopener" href="https://github.com/wzpan/hexo-generator-search" style="color:#49B1F5;">hexo-generator-search</a></div></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@latest/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/lazysizes@latest/lazysizes.min.js" async=""></script><script src="/js/search/local-search.js"></script></body></html>
