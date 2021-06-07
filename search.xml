@@ -4,31 +4,6 @@
   
     
     <entry>
-      <title>OWASP Top 10之 XXE 漏洞学习</title>
-      <link href="2021/05/30/learnXXE/"/>
-      <url>2021/05/30/learnXXE/</url>
-      
-        <content type="html"><![CDATA[<h2 id="0x00-什么是XXE？"><a href="#0x00-什么是XXE？" class="headerlink" title="0x00 什么是XXE？"></a>0x00 什么是XXE？</h2><h2 id="0x01-XML基础知识"><a href="#0x01-XML基础知识" class="headerlink" title="0x01 XML基础知识"></a>0x01 XML基础知识</h2><h3 id="XML-是什么？"><a href="#XML-是什么？" class="headerlink" title="XML 是什么？"></a>XML 是什么？</h3><h3 id="XML实体是什么？"><a href="#XML实体是什么？" class="headerlink" title="XML实体是什么？"></a>XML实体是什么？</h3><h3 id="DTD"><a href="#DTD" class="headerlink" title="DTD"></a>DTD</h3><p>文档类型定义（DTD）可定义合法的XML文档构建模块。它使用一系列合法的元素来定义文档的结构。</p><p>DTD 可被成行地声明于 XML 文档中，也可作为一个外部引用。</p><h3 id="XML自定义实体"><a href="#XML自定义实体" class="headerlink" title="XML自定义实体"></a>XML自定义实体</h3><h3 id="XML外部实体"><a href="#XML外部实体" class="headerlink" title="XML外部实体"></a>XML外部实体</h3>]]></content>
-      
-      
-      <categories>
-          
-          <category> 漏洞学习 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> xxe </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>搭建Vulfocus快速进行漏洞复现及靶场搭建</title>
       <link href="2021/01/26/Vulfocus-build/"/>
       <url>2021/01/26/Vulfocus-build/</url>
